@@ -20,6 +20,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tutorial 03 - Texturing", "
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tutorial 04 - Depth and Transparency", "4) Depth & Transparency\Tutorial4.vcxproj", "{45EBBBBF-1252-40BA-8C99-68085713A623}"
+	ProjectSection(ProjectDependencies) = postProject
+		{98D6B51B-CB0A-4389-ADC6-24082B967C3F} = {98D6B51B-CB0A-4389-ADC6-24082B967C3F}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tutorial 05 - Scissors and Stencils", "5) Stencils & Scissors\Tutorial5.vcxproj", "{E32F8803-372F-4674-A0E7-11E0FECF4B87}"
 EndProject
