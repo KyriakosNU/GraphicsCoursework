@@ -1,5 +1,5 @@
 #pragma once
-#include "C:\Users\kyria\OneDrive\NewcastleUni\Graphics\nclgl\OGLRenderer.h"
+#include "../nclgl/OGLRenderer.h"
 class Renderer :
     public OGLRenderer
 {
