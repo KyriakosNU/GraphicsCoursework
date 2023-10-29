@@ -4,7 +4,7 @@ in vec3 position ;
 in vec4 colour ;
 
 out Vertex{
-	vec4 colour;
+	flat vec4 colour;
 }OUT;
 
 void main(void)	{
