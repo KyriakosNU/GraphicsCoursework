@@ -15,12 +15,12 @@ int main() {
 	float rotate = 0.0f;
 	while(w.UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)){
 		if(Window::GetKeyboard()->KeyDown(KEYBOARD_LEFT) ) {
-			--rotate;
+			rotate-=0.1;
 			renderer.UpdateTextureMatrix(rotate);
 		}
 
 		if(Window::GetKeyboard()->KeyDown(KEYBOARD_RIGHT) ) {
-			++rotate;
+			rotate+=0.1;
 			renderer.UpdateTextureMatrix(rotate);
 		}
 
