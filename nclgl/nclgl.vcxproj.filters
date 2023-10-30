@@ -33,8 +33,6 @@
       <Filter>Windows and Input</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="SceneNode.cpp" />
-    <ClCompile Include="CubeRobot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -79,8 +77,6 @@
       <Filter>Windows and Input</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="SceneNode.h" />
-    <ClInclude Include="CubeRobot.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">
