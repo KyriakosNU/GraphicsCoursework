@@ -37,6 +37,7 @@
     <ClCompile Include="CubeRobot.cpp" />
     <ClCompile Include="Plane.cpp" />
     <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="HeightMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -85,6 +86,7 @@
     <ClInclude Include="CubeRobot.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="Frustum.h" />
+    <ClInclude Include="HeightMap.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">
