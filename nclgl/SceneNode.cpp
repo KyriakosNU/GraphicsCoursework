@@ -5,6 +5,9 @@ SceneNode::SceneNode(Mesh* mesh, Vector4 colour) {
 	this->colour = colour;
 	parent = NULL;
 	modelScale = Vector3(1, 1, 1);
+	boundingRadius = 1.0f;
+	distanceFromCamera = 0.0f;
+	texture = 0;
 }
 
 SceneNode::~SceneNode(void) {

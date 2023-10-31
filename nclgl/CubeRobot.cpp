@@ -32,6 +32,15 @@ CubeRobot::CubeRobot(Mesh* cube) {
 	rightLeg->SetModelScale(Vector3(3, -17.5, 3));
 	rightLeg->SetTransform(Matrix4::Translation(Vector3(8, 0, 0)));
 	body->AddChild(rightLeg);
+
+	body->SetBoundingRadius(15.0f);
+	head->SetBoundingRadius(5.0f);
+	
+	leftArm->SetBoundingRadius(18.0f);
+	rightArm->SetBoundingRadius(18.0f);
+
+	leftLeg->SetBoundingRadius(18.0f);
+	rightLeg->SetBoundingRadius(18.0f);
 }
 
 void CubeRobot::Update(float dt) {

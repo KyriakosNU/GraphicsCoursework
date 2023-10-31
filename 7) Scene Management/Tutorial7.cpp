@@ -16,8 +16,7 @@ int main() {
 	w.ShowOSPointer(false);
 
 	while(w.UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)){
-		float timestep = w.GetTimer()->GetTimeDeltaSeconds();
-		renderer.UpdateScene(timestep);
+		renderer.UpdateScene(w.GetTimer()->GetTimeDeltaSeconds());
 		renderer.RenderScene();
 		renderer.SwapBuffers();
 		if (Window::GetKeyboard()->KeyDown(KEYBOARD_F5)) {

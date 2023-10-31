@@ -35,6 +35,8 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="SceneNode.cpp" />
     <ClCompile Include="CubeRobot.cpp" />
+    <ClCompile Include="Plane.cpp" />
+    <ClCompile Include="Frustum.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -81,6 +83,8 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="SceneNode.h" />
     <ClInclude Include="CubeRobot.h" />
+    <ClInclude Include="Plane.h" />
+    <ClInclude Include="Frustum.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">
