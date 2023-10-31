@@ -21,6 +21,7 @@ int main() {
 		if (Window::GetKeyboard()->KeyDown(KEYBOARD_F5)) {
 			Shader::ReloadAllShaders();
 		}
+		renderer.SwapBuffers();
 	}
 
 	return 0;
