@@ -28,7 +28,7 @@ void Frustum::FromMatrix(const Matrix4& mat){
 					(mat.values[15] + mat.values[12]), true);
 
 	// BOTTOM
-	planes[3] = Plane(waxis + yaxis,
+	planes[2] = Plane(waxis + yaxis,
 					(mat.values[15] + mat.values[13]), true);
 
 	// TOP

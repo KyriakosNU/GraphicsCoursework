@@ -8,7 +8,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	quad = Mesh::GenerateQuad();
 	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
 
-	shader = new Shader("SceneVertex.glsl","SceneFragment.glsl");
+	shader = new Shader("SceneVertex.glsl", "SceneFragment.glsl");
 
 	texture = SOIL_load_OGL_texture(
 		TEXTUREDIR "stainedglass.tga",
