@@ -38,6 +38,7 @@
     <ClCompile Include="Plane.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="HeightMap.cpp" />
+    <ClCompile Include="Light.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -87,6 +88,7 @@
     <ClInclude Include="Plane.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="HeightMap.h" />
+    <ClInclude Include="Light.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">
