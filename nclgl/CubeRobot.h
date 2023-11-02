@@ -5,6 +5,7 @@ class CubeRobot :
 {
 public:
     CubeRobot(Mesh * cube);
+    CubeRobot(Mesh* cube, float scale);
     ~CubeRobot(void) {};
     void Update(float dt) override;
 protected:

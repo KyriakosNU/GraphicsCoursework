@@ -43,6 +43,51 @@ CubeRobot::CubeRobot(Mesh* cube) {
 	rightLeg->SetBoundingRadius(18.0f);
 }
 
+CubeRobot::CubeRobot(Mesh* cube,float scale) {
+	SetMesh(cube);
+
+	SetModelScale(Vector3(scale,scale,scale));
+
+	SceneNode* body = new SceneNode(cube, Vector4(1, 0, 0, 1)); // Red !
+	body->SetModelScale(Vector3(10 * scale, 15 * scale, 5 * scale));
+	body->SetTransform(Matrix4::Translation(Vector3(0, 35, 0)));
+	AddChild(body);
+
+	head = new SceneNode(cube, Vector4(0, 1, 0, 1)); // Green !
+	head->SetModelScale(Vector3(5 * scale, 5 * scale, 5 * scale));
+	head->SetTransform(Matrix4::Translation(Vector3(0, 30, 0)));
+	body->AddChild(head);
+
+	leftArm = new SceneNode(cube, Vector4(0, 0, 1, 1)); // Red !
+	leftArm->SetModelScale(Vector3(3 * scale, -18 * scale, 3 * scale));
+	leftArm->SetTransform(Matrix4::Translation(Vector3(-12, 30, -1)));
+	body->AddChild(leftArm);
+
+	rightArm = new SceneNode(cube, Vector4(0, 0, 1, 1)); // Red !
+	rightArm->SetModelScale(Vector3(3 * scale, -18 * scale, 3 * scale));
+	rightArm->SetTransform(Matrix4::Translation(Vector3(12, 30, -1)));
+	body->AddChild(rightArm);
+
+	SceneNode* leftLeg = new SceneNode(cube, Vector4(0, 0, 1, 1)); // Blue !
+	leftLeg->SetModelScale(Vector3(3 * scale, -17.5 * scale, 3 * scale));
+	leftLeg->SetTransform(Matrix4::Translation(Vector3(-8, 0, 0)));
+	body->AddChild(leftLeg);
+
+	SceneNode* rightLeg = new SceneNode(cube, Vector4(0, 0, 1, 1)); // Blue !
+	rightLeg->SetModelScale(Vector3(3 * scale, -17.5 * scale, 3 * scale));
+	rightLeg->SetTransform(Matrix4::Translation(Vector3(8, 0, 0)));
+	body->AddChild(rightLeg);
+
+	body->SetBoundingRadius(15.0f * scale);
+	head->SetBoundingRadius(5.0f * scale);
+
+	leftArm->SetBoundingRadius(18.0f * scale);
+	rightArm->SetBoundingRadius(18.0f * scale);
+
+	leftLeg->SetBoundingRadius(18.0f * scale);
+	rightLeg->SetBoundingRadius(18.0f * scale);
+}
+
 void CubeRobot::Update(float dt) {
 	transform = transform *
 		Matrix4::Rotation(30.0f * dt, Vector3(0, 1, 0));
