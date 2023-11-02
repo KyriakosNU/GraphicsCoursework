@@ -121,5 +121,8 @@ protected:
 	std::vector<int>			jointParents;
 	std::vector< SubMesh>		meshLayers;
 	std::vector<std::string>	layerNames;
+
+	void GenerateTangents();
+	Vector4 GenerateTangent(int a, int b, int c);
 };
 
