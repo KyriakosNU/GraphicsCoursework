@@ -17,7 +17,7 @@ public :
 
 	~ Camera ( void ){};
 
-	void UpdateCamera ( float dt = 1.0f );
+	virtual void UpdateCamera ( float dt = 1.0f );
 
 	Matrix4 BuildViewMatrix ();
 

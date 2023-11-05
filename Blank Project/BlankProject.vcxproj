@@ -137,10 +137,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BlankProject.cpp" />
-    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="SurfaceRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="SurfaceRenderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

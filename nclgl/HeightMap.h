@@ -7,6 +7,7 @@ class HeightMap :
 {
 public:
     HeightMap(const std::string& name);
+    HeightMap(const std::string& name, const float scale);
     ~HeightMap(void) {};
 
     Vector3 GetHeightmapSize() const{ return heightmapSize; };
