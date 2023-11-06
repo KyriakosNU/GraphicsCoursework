@@ -86,7 +86,7 @@ void AutomaticCamera::UpdateTrackCamera(float dt)
 
 	float targetYaw = (abs(cameraStates[currentState + 1].GetYaw() - yaw) < 180) ?
 						cameraStates[currentState + 1].GetYaw() - yaw:
-						cameraStates[currentState + 1].GetYaw() + yaw;
+						-(cameraStates[currentState + 1].GetYaw() - yaw);
 
 	float targetPitch = cameraStates[currentState + 1].GetPitch() - pitch;
 
@@ -94,8 +94,8 @@ void AutomaticCamera::UpdateTrackCamera(float dt)
 
 	Vector2 targetRotNormalised = Vector2(targetYaw, targetPitch).Normalised();
 
-	yaw -= targetRotNormalised.x * rotSpeed;
-	pitch -= targetRotNormalised.y * rotSpeed;
+	yaw += targetRotNormalised.x * rotSpeed;
+	pitch += targetRotNormalised.y * rotSpeed;
 
 	pitch = std::min(pitch, 90.0f);
 	pitch = std::max(pitch, -90.0f);
@@ -111,18 +111,17 @@ void AutomaticCamera::UpdateTrackCamera(float dt)
 void AutomaticCamera::InstantiateTrack()
 {
 	
-	cameraStates[0] = CameraState(-80, 0, Vector3(4096.0, 800.0, 4096.0));
-	stateChangeTimes[0] = 5;
+	cameraStates[0] = CameraState(20, 30, Vector3(4296.0, 600.0, 4096.0));
+	stateChangeTimes[0] = 10;
 
-	cameraStates[1] = CameraState(-80, 350, Vector3(4296.0, 300.0, 4096.0));
-	stateChangeTimes[1] = 10;
+	cameraStates[1] = CameraState(-20, 350, Vector3(4296.0, 500.0, 4096.0));
+	stateChangeTimes[1] = 15;
 
-	cameraStates[2] = CameraState(-80, 320, Vector3(4396.0, 500.0, 4096.0));
+	cameraStates[2] = CameraState(20, 0, Vector3(4296.0, 600.0, 4096.0));
 	stateChangeTimes[2] = 20;
 
-	cameraStates[3] = CameraState(-80, 0, Vector3(4496.0, 800.0, 4096.0));
+	cameraStates[3] = CameraState(20, 0, Vector3(4296.0, 600.0, 4096.0));
 	stateChangeTimes[3] = 25;
 
-	cameraStates[4] = CameraState(0, 2, Vector3(4596.0, 900.0, 4096.0));
-	
+	cameraStates[4] = CameraState(20, 0, Vector3(4296.0, 600.0, 4096.0));
 }
