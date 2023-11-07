@@ -32,6 +32,7 @@ public:
 	~AutomaticCamera(void) {};
 
     bool getIsFree() const { return isFree; }
+	void setIsFree(bool isFree);
 	void toggleIsFree();
 
 	void UpdateCamera(float dt);

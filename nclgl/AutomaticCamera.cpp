@@ -14,11 +14,24 @@ void AutomaticCamera::ResetTrackCamera()
 void AutomaticCamera::toggleIsFree()
 {
 	isFree = !isFree;
-	if(isFree)
+	if(!isFree)
+		AutomaticCamera::ResetTrackCamera();
+}
+
+void AutomaticCamera::setIsFree(bool isFree)
+{
+	this->isFree = isFree;
+	if (!this->isFree)
 		AutomaticCamera::ResetTrackCamera();
 }
 
 void AutomaticCamera::UpdateCamera(float dt) {
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_1))
+		setIsFree(false);
+
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_2))
+		setIsFree(true);
+
 	if (isFree)
 		AutomaticCamera::UpdateFreeCamera(dt);
 	else
