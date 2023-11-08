@@ -2,13 +2,18 @@
 #include "../nclgl/Light.h"
 #include "../nclgl/AutomaticCamera.h"
 #include "../nclgl/HeightMap.h"
+#include "../nclgl/MeshMaterial.h"
+#include <algorithm>
 
 SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 	quad = Mesh::GenerateQuad();
 
+	planetMesh = Mesh::LoadFromMeshFile("forest.msh");
+	material = new MeshMaterial("forest.mat");
+
 	heightMap = new HeightMap(TEXTUREDIR "noise.png" , 32.0f);
 
-	texture = SOIL_load_OGL_texture(
+	groundText = SOIL_load_OGL_texture(
 		TEXTUREDIR "Barren Reds.JPG ", SOIL_LOAD_AUTO,
 		SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 
@@ -16,18 +21,17 @@ SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 		TEXTUREDIR "Barren RedsDOT3.JPG ", SOIL_LOAD_AUTO,
 		SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 
-	
 	cubeMap = SOIL_load_OGL_cubemap(
 		TEXTUREDIR "bkg_right.png", TEXTUREDIR "bkg_left.png",
 		TEXTUREDIR "bkg_top.png", TEXTUREDIR "bkg_bot.png",
 		TEXTUREDIR "bkg_front.png", TEXTUREDIR "bkg_back.png",
-		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
+		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 1);
 
-	if (!texture || !bumpmap || !cubeMap) {
+	if (!groundText || !bumpmap || !cubeMap ) {
 		return;
 	}
 
-	SetTextureRepeating(texture, true);
+	SetTextureRepeating(groundText, true);
 	SetTextureRepeating(bumpmap, true);
 
 	shader = new Shader("BumpVertex.glsl", "BumpFragment.glsl");
@@ -62,10 +66,34 @@ SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 
 void SurfaceRenderer::AddMeshesToScene(){
 	Mesh* cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
-	CubeRobot* CR = new CubeRobot(cube);
-	CR->SetTransform(Matrix4::Translation(Vector3(4296.0, 600.0, 4096.0)));
+	//CubeRobot* CR = new CubeRobot(cube);
+	//CR->SetTransform(Matrix4::Translation(Vector3(4296.0, 400.0, 4096.0)));
 	root = new SceneNode();
-	root->AddChild(CR);
+	//root->AddChild(CR);
+
+	for (int i = 0; i < 1; ++i) {
+		SceneNode* s = new SceneNode();
+		s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
+		s->SetTransform(Matrix4::Translation(
+			Vector3(4296.0, 600.0, 4096.0 -300.0f + 100.0f + 100 * i)));
+		s->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
+		s->SetBoundingRadius(100.0f);
+		s->SetMesh(planetMesh);
+
+		for (int i = 0; i < planetMesh->GetSubMeshCount(); ++i) {
+			const MeshMaterialEntry* matEntry =
+				material->GetMaterialForLayer(i);
+
+			const string* filename = nullptr;
+			matEntry->GetEntry("Diffuse", &filename);
+			string path = TEXTUREDIR + *filename;
+			GLuint texID = SOIL_load_OGL_texture(path.c_str(), SOIL_LOAD_AUTO,
+				SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y);
+			s->AddTexture(texID);
+		}
+
+		root->AddChild(s);
+	}
 }
 
 SurfaceRenderer ::~SurfaceRenderer(void) {
@@ -76,20 +104,29 @@ SurfaceRenderer ::~SurfaceRenderer(void) {
 	delete root;
 	delete skyboxShader;
 	delete quad;
-
+	glDeleteTextures(1, &groundText);
 }
 
 void SurfaceRenderer::UpdateScene(float dt) {
 	camera->UpdateCamera(dt);
+
 	viewMatrix = camera->BuildViewMatrix();
+	frameFrustum.FromMatrix(projMatrix * viewMatrix);
+
 	root->Update(dt);
 }
 
 void SurfaceRenderer::RenderScene() {
+	BuildNodeLists(root);
+	SortNodeLists();
+
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
 	DrawSkybox();
 	DrawHeightmap();
-	DrawNode(root);
+
+	DrawNodes();
+	ClearNodeLists();
 }
 
 void SurfaceRenderer::DrawHeightmap(){
@@ -98,7 +135,7 @@ void SurfaceRenderer::DrawHeightmap(){
 	glUniform1i(glGetUniformLocation(
 		shader->GetProgram(), "diffuseTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glBindTexture(GL_TEXTURE_2D, groundText);
 
 	glUniform1i(glGetUniformLocation(
 		shader->GetProgram(), "bumpTex"), 1);
@@ -117,6 +154,47 @@ void SurfaceRenderer::DrawHeightmap(){
 	heightMap->Draw();
 }
 
+void SurfaceRenderer::BuildNodeLists(SceneNode* from) {
+	if (frameFrustum.InsideFrustum(*from)) {
+		Vector3 dir = from->GetWorldTransform().GetPositionVector() -
+			camera->GetPosition();
+		from->SetCameraDistance(Vector3::Dot(dir, dir));
+
+		if (from->GetColour().w < 1.0f) {
+			transparentNodeList.push_back(from);
+		}
+		else {
+			nodeList.push_back(from);
+		}
+
+	}
+
+	for (vector < SceneNode* >::const_iterator i =
+		from->GetChildIteratorStart();
+		i != from->GetChildIteratorEnd(); ++i) {
+		BuildNodeLists((*i));
+	}
+
+}
+
+void SurfaceRenderer::SortNodeLists() {
+	std::sort(transparentNodeList.rbegin(), // note the r!
+		transparentNodeList.rend(), // note the r!
+		SceneNode::CompareByCameraDistance);
+	std::sort(nodeList.begin(),
+		nodeList.end(),
+		SceneNode::CompareByCameraDistance);
+}
+
+void SurfaceRenderer::DrawNodes() {
+	for (const auto& i : nodeList) {
+		DrawNode(i);
+	}
+	for (const auto& i : transparentNodeList) {
+		DrawNode(i);
+	}
+}
+
 void SurfaceRenderer::DrawNode(SceneNode* n) {
 	if (n->GetMesh()) {
 		Matrix4 model = n->GetWorldTransform() *
@@ -129,9 +207,18 @@ void SurfaceRenderer::DrawNode(SceneNode* n) {
 		glUniform4fv(glGetUniformLocation(shader->GetProgram(),
 			"nodeColour"), 1, (float*)&n->GetColour());
 
-		glUniform1i(glGetUniformLocation(shader->GetProgram(),
-			"useTexture"), 0); // Next tutorial ;)
-		n->Draw(*this);
+		for (int i = 0; i < n->GetMesh()->GetSubMeshCount(); ++i) {
+			texture = n->GetTexture(i);
+			
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texture);
+
+			glUniform1i(glGetUniformLocation(shader->GetProgram(),
+				"useTexture"), texture);
+
+			n->GetMesh()->DrawSubMesh(i);
+		}
+		
 	}
 
 	for (vector < SceneNode* >::const_iterator
@@ -150,4 +237,9 @@ void SurfaceRenderer::DrawSkybox() {
 	quad->Draw();
 
 	glDepthMask(GL_TRUE);
+}
+
+void SurfaceRenderer::ClearNodeLists() {
+	transparentNodeList.clear();
+	nodeList.clear();
 }

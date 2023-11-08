@@ -42,9 +42,18 @@ public:
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
 
-	void SetTexture(GLuint tex) { texture = tex; }
-	GLuint GetTexture() const { return texture; }
-	
+	void SetTexture(GLuint tex, int index=0) { textures[index] = tex; }
+	void AddTexture(GLuint tex);
+	GLuint GetTexture(int index = 0) const { return textures[index]; }
+
+	std::vector < GLuint >::const_iterator GetTextureIteratorStart() {
+		return textures.begin();
+	}
+
+	std::vector < GLuint >::const_iterator GetTextureIteratorEnd() {
+		return textures.end();
+	}
+
 	static bool CompareByCameraDistance(SceneNode* a, SceneNode* b) {
 		return (a->distanceFromCamera <
 			b->distanceFromCamera) ? true : false;
@@ -59,8 +68,8 @@ protected:
 	Vector4 colour;
 	float distanceFromCamera;
 	float boundingRadius;
-	GLuint texture;
-	std::vector < SceneNode* > children;
+	std::vector <GLuint> textures;
+	std::vector <SceneNode*> children;
 };
 
 

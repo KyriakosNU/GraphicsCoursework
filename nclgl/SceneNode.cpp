@@ -7,7 +7,7 @@ SceneNode::SceneNode(Mesh* mesh, Vector4 colour) {
 	modelScale = Vector3(1, 1, 1);
 	boundingRadius = 1.0f;
 	distanceFromCamera = 0.0f;
-	texture = 0;
+	textures.emplace_back(0);
 }
 
 SceneNode::~SceneNode(void) {
@@ -38,3 +38,10 @@ void SceneNode::Update(float dt) {
 		(*i) -> Update(dt);
 	}
 }
+
+void SceneNode::AddTexture(GLuint tex) { 
+	if (textures[0] != 0)
+		textures.emplace_back(tex);
+	else
+		textures[0] = tex;
+};
