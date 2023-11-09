@@ -4,7 +4,7 @@
 #include "../nclgl/CubeRobot.h"
 #include "../nclgl/Frustum.h"
 class HeightMap;
-class Camera;
+class AutomaticCamera;
 class Light;
 class Shader;
 class MeshAnimation;
@@ -24,14 +24,16 @@ protected:
 	void DrawHeightmap();
 	void DrawNodes();
 	void DrawNode(SceneNode* n);
+	void DrawAnimatedNode(SceneNode* n);
 	void DrawSkybox();
 	void SortNodeLists();
 	void ClearNodeLists();
 
-	Camera* camera;
+	AutomaticCamera* camera;
 
 	Shader* shader;
 	Shader* skyboxShader;
+	Shader* skinningShader;
 
 	HeightMap* heightMap;
 	
@@ -42,18 +44,21 @@ protected:
 	GLuint bumpmap;
 	GLuint cubeMap;
 
-	vector <GLuint > matTextures;
-
 	Frustum frameFrustum;
 
 	Mesh* quad;
-	Mesh* planetMesh;
+	Mesh* mesh;
 
 	SceneNode* root;
 
 	MeshAnimation* anim;
 	MeshMaterial* material;
+	vector <GLuint > matTextures;
 
+	int currentFrame;
+	float frameTime;
+
+	vector < SceneNode*> animatedNodeList;
 	vector < SceneNode*> transparentNodeList;
 	vector < SceneNode*> nodeList;
 };

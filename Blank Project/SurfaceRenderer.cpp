@@ -3,13 +3,11 @@
 #include "../nclgl/AutomaticCamera.h"
 #include "../nclgl/HeightMap.h"
 #include "../nclgl/MeshMaterial.h"
+#include "../nclgl/MeshAnimation.h"
 #include <algorithm>
 
 SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 	quad = Mesh::GenerateQuad();
-
-	planetMesh = Mesh::LoadFromMeshFile("forest.msh");
-	material = new MeshMaterial("forest.mat");
 
 	heightMap = new HeightMap(TEXTUREDIR "noise.png" , 32.0f);
 
@@ -39,6 +37,8 @@ SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 	skyboxShader = new Shader(
 		"skyboxVertex.glsl", "skyboxFragment.glsl");
 
+	skinningShader = new Shader("SkinningVertex.glsl", "texturedFragment.glsl");
+
 	if (!shader->LoadSuccess() ||
 		!skyboxShader->LoadSuccess()){
 		return;
@@ -61,6 +61,10 @@ SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+	currentFrame = 0;
+	frameTime = 0.0f;
+
 	init = true;
 }
 
@@ -71,16 +75,20 @@ void SurfaceRenderer::AddMeshesToScene(){
 	root = new SceneNode();
 	//root->AddChild(CR);
 
+	//Adding forest planet nodes
+	mesh = Mesh::LoadFromMeshFile("forest.msh");
+	material = new MeshMaterial("forest.mat");
+
 	for (int i = 0; i < 1; ++i) {
 		SceneNode* s = new SceneNode();
 		s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
 		s->SetTransform(Matrix4::Translation(
-			Vector3(4296.0, 600.0, 4096.0 -300.0f + 100.0f + 100 * i)));
-		s->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
+			Vector3(4296.0, 900.0, 6096.0 -300.0f + 100.0f + 100 * i)));
+		s->SetModelScale(Vector3(50.0f, 50.0f, 50.0f));
 		s->SetBoundingRadius(100.0f);
-		s->SetMesh(planetMesh);
+		s->SetMesh(mesh);
 
-		for (int i = 0; i < planetMesh->GetSubMeshCount(); ++i) {
+		for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {
 			const MeshMaterialEntry* matEntry =
 				material->GetMaterialForLayer(i);
 
@@ -94,6 +102,38 @@ void SurfaceRenderer::AddMeshesToScene(){
 
 		root->AddChild(s);
 	}
+
+	//Adding Robot Guard
+	
+	mesh = Mesh::LoadFromMeshFile("Role_T.msh");
+	anim = new MeshAnimation("Role_T.anm");
+	material = new MeshMaterial("Role_T.mat");
+	SceneNode* s = new SceneNode();
+
+	s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
+	s->SetTransform(Matrix4::Translation(
+		Vector3(4296.0,500.0, 5096.0)) * Matrix4::Rotation(180,Vector3(0,1,0)));
+	s->SetModelScale(Vector3(300.0f, 300.0f, 300.0f));
+	s->SetBoundingRadius(100.0f);
+	s->SetMesh(mesh);
+	s->SetMeshAnimation(anim);
+	
+	for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {
+		const MeshMaterialEntry* matEntry =
+			material->GetMaterialForLayer(i);
+
+		const string* filename = nullptr;
+		matEntry->GetEntry("Diffuse", &filename);
+		string path = TEXTUREDIR + *filename;
+		GLuint texID = SOIL_load_OGL_texture(path.c_str(), SOIL_LOAD_AUTO,
+			SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y);
+		s->AddTexture(texID);
+	}
+
+	root->AddChild(s);
+
+	currentFrame = 0;
+	frameTime = 0.0f;
 }
 
 SurfaceRenderer ::~SurfaceRenderer(void) {
@@ -104,6 +144,8 @@ SurfaceRenderer ::~SurfaceRenderer(void) {
 	delete root;
 	delete skyboxShader;
 	delete quad;
+	delete anim;
+	delete mesh;
 	glDeleteTextures(1, &groundText);
 }
 
@@ -114,6 +156,13 @@ void SurfaceRenderer::UpdateScene(float dt) {
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
 
 	root->Update(dt);
+	
+	frameTime -= dt;
+	while (frameTime < 0.0f) {
+		currentFrame = (currentFrame + 1) % anim->GetFrameCount();
+		frameTime += 1.0f / anim->GetFrameRate();
+	}
+	
 }
 
 void SurfaceRenderer::RenderScene() {
@@ -160,7 +209,10 @@ void SurfaceRenderer::BuildNodeLists(SceneNode* from) {
 			camera->GetPosition();
 		from->SetCameraDistance(Vector3::Dot(dir, dir));
 
-		if (from->GetColour().w < 1.0f) {
+		if (from->GetMeshAnimation() != NULL)
+		{
+			animatedNodeList.push_back(from);
+		}else if (from->GetColour().w < 1.0f) {
 			transparentNodeList.push_back(from);
 		}
 		else {
@@ -181,15 +233,32 @@ void SurfaceRenderer::SortNodeLists() {
 	std::sort(transparentNodeList.rbegin(), // note the r!
 		transparentNodeList.rend(), // note the r!
 		SceneNode::CompareByCameraDistance);
+
+	std::sort(animatedNodeList.begin(),
+		animatedNodeList.end(),
+		SceneNode::CompareByCameraDistance);
+
 	std::sort(nodeList.begin(),
 		nodeList.end(),
 		SceneNode::CompareByCameraDistance);
 }
 
 void SurfaceRenderer::DrawNodes() {
+
+	BindShader(shader);
+
 	for (const auto& i : nodeList) {
 		DrawNode(i);
 	}
+
+
+
+	for (const auto& i : animatedNodeList) {
+		DrawAnimatedNode(i);
+	}
+
+	BindShader(shader);
+
 	for (const auto& i : transparentNodeList) {
 		DrawNode(i);
 	}
@@ -228,6 +297,45 @@ void SurfaceRenderer::DrawNode(SceneNode* n) {
 	}
 }
 
+void SurfaceRenderer::DrawAnimatedNode(SceneNode* n)
+{
+	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+	BindShader(skinningShader);
+	glUniform1i(glGetUniformLocation(skinningShader->GetProgram(),
+		"diffuseTex"), 0);
+
+	UpdateShaderMatrices();
+
+	Matrix4 model = n->GetWorldTransform() *
+		Matrix4::Scale(n->GetModelScale());
+
+	glUniformMatrix4fv(
+		glGetUniformLocation(skinningShader->GetProgram(),
+			"modelMatrix"), 1, false, model.values);
+
+	vector < Matrix4 > frameMatrices;
+	
+	const Matrix4* invBindPose = n->GetMesh()->GetInverseBindPose();
+	const Matrix4* frameData = n->GetMeshAnimation()
+								->GetJointData(currentFrame);
+
+	for (unsigned int i = 0; i < n->GetMesh()->GetJointCount(); ++i) {
+		frameMatrices.emplace_back(frameData[i] * invBindPose[i]);
+	}
+
+	int j = glGetUniformLocation(skinningShader->GetProgram(), "joints");
+	glUniformMatrix4fv(j, frameMatrices.size(), false,
+		(float*)frameMatrices.data());
+
+	for (int i = 0; i < n->GetMesh()->GetSubMeshCount(); ++i) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, n->GetTexture(i));
+		n->GetMesh()->DrawSubMesh(i);
+	}
+
+}
+
 void SurfaceRenderer::DrawSkybox() {
 	glDepthMask(GL_FALSE);
 
@@ -241,5 +349,6 @@ void SurfaceRenderer::DrawSkybox() {
 
 void SurfaceRenderer::ClearNodeLists() {
 	transparentNodeList.clear();
+	animatedNodeList.clear();
 	nodeList.clear();
 }

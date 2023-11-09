@@ -5,10 +5,12 @@
 #include "Mesh.h"
 #include < vector >
 
+class MeshAnimation;
+
 class SceneNode
 {
 public:
-	SceneNode(Mesh* m = NULL, Vector4 colour = Vector4(1, 1, 1, 1));
+	SceneNode(Mesh* m = NULL, Vector4 colour = Vector4(1, 1, 1, 1), MeshAnimation* anim = NULL);
 	~SceneNode(void);
 	
 	void SetTransform(const Matrix4 & matrix) { transform = matrix; }
@@ -46,6 +48,9 @@ public:
 	void AddTexture(GLuint tex);
 	GLuint GetTexture(int index = 0) const { return textures[index]; }
 
+	MeshAnimation* GetMeshAnimation() const { return anim; }
+	void SetMeshAnimation(MeshAnimation* a) { anim = a; }
+
 	std::vector < GLuint >::const_iterator GetTextureIteratorStart() {
 		return textures.begin();
 	}
@@ -69,6 +74,7 @@ protected:
 	float distanceFromCamera;
 	float boundingRadius;
 	std::vector <GLuint> textures;
+	MeshAnimation* anim;
 	std::vector <SceneNode*> children;
 };
 
