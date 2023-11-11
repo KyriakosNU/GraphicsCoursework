@@ -3,9 +3,8 @@
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Mesh.h"
+#include "MeshAnimation.h";
 #include < vector >
-
-class MeshAnimation;
 
 class SceneNode
 {
@@ -48,8 +47,13 @@ public:
 	void AddTexture(GLuint tex);
 	GLuint GetTexture(int index = 0) const { return textures[index]; }
 
+	const Matrix4* GetFrameData() const
+	{
+		return (*anim).GetJointData(currentFrame);
+	}
 	MeshAnimation* GetMeshAnimation() const { return anim; }
 	void SetMeshAnimation(MeshAnimation* a) { anim = a; }
+
 
 	std::vector < GLuint >::const_iterator GetTextureIteratorStart() {
 		return textures.begin();
@@ -76,6 +80,9 @@ protected:
 	std::vector <GLuint> textures;
 	MeshAnimation* anim;
 	std::vector <SceneNode*> children;
+
+	int currentFrame;
+	float frameTime;
 };
 
 

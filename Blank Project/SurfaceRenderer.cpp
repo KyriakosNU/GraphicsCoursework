@@ -62,8 +62,6 @@ SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	currentFrame = 0;
-	frameTime = 0.0f;
 
 	init = true;
 }
@@ -84,7 +82,7 @@ void SurfaceRenderer::AddMeshesToScene(){
 		s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
 		s->SetTransform(Matrix4::Translation(
 			Vector3(4296.0, 900.0, 6096.0 -300.0f + 100.0f + 100 * i)));
-		s->SetModelScale(Vector3(50.0f, 50.0f, 50.0f));
+		s->SetModelScale(Vector3(1.0f, 1.0f, 1.0f));
 		s->SetBoundingRadius(100.0f);
 		s->SetMesh(mesh);
 
@@ -105,18 +103,18 @@ void SurfaceRenderer::AddMeshesToScene(){
 
 	//Adding Robot Guard
 	
-	mesh = Mesh::LoadFromMeshFile("Role_T.msh");
-	anim = new MeshAnimation("Role_T.anm");
-	material = new MeshMaterial("Role_T.mat");
+	mesh = Mesh::LoadFromMeshFile("Stylized Astronaut.msh");
+	//anim = new MeshAnimation("Idle.anm");
+	material = new MeshMaterial("Stylized Astronaut.mat");
 	SceneNode* s = new SceneNode();
 
 	s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
 	s->SetTransform(Matrix4::Translation(
 		Vector3(4296.0,500.0, 5096.0)) * Matrix4::Rotation(180,Vector3(0,1,0)));
-	s->SetModelScale(Vector3(300.0f, 300.0f, 300.0f));
+	s->SetModelScale(Vector3(200.0f, 200.0f, 200.0f));
 	s->SetBoundingRadius(100.0f);
 	s->SetMesh(mesh);
-	s->SetMeshAnimation(anim);
+	//s->SetMeshAnimation(anim);
 	
 	for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {
 		const MeshMaterialEntry* matEntry =
@@ -132,8 +130,6 @@ void SurfaceRenderer::AddMeshesToScene(){
 
 	root->AddChild(s);
 
-	currentFrame = 0;
-	frameTime = 0.0f;
 }
 
 SurfaceRenderer ::~SurfaceRenderer(void) {
@@ -157,11 +153,7 @@ void SurfaceRenderer::UpdateScene(float dt) {
 
 	root->Update(dt);
 	
-	frameTime -= dt;
-	while (frameTime < 0.0f) {
-		currentFrame = (currentFrame + 1) % anim->GetFrameCount();
-		frameTime += 1.0f / anim->GetFrameRate();
-	}
+
 	
 }
 
@@ -172,7 +164,7 @@ void SurfaceRenderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	DrawSkybox();
-	DrawHeightmap();
+	//DrawHeightmap();
 
 	DrawNodes();
 	ClearNodeLists();
@@ -246,19 +238,23 @@ void SurfaceRenderer::SortNodeLists() {
 void SurfaceRenderer::DrawNodes() {
 
 	BindShader(shader);
+	UpdateShaderMatrices();
 
 	for (const auto& i : nodeList) {
 		DrawNode(i);
 	}
 
+	BindShader(skinningShader);
+	glUniform1i(glGetUniformLocation(skinningShader->GetProgram(),
+		"diffuseTex"), 0);
 
+	UpdateShaderMatrices();
 
 	for (const auto& i : animatedNodeList) {
 		DrawAnimatedNode(i);
 	}
 
 	BindShader(shader);
-
 	for (const auto& i : transparentNodeList) {
 		DrawNode(i);
 	}
@@ -299,14 +295,6 @@ void SurfaceRenderer::DrawNode(SceneNode* n) {
 
 void SurfaceRenderer::DrawAnimatedNode(SceneNode* n)
 {
-	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-	BindShader(skinningShader);
-	glUniform1i(glGetUniformLocation(skinningShader->GetProgram(),
-		"diffuseTex"), 0);
-
-	UpdateShaderMatrices();
-
 	Matrix4 model = n->GetWorldTransform() *
 		Matrix4::Scale(n->GetModelScale());
 
@@ -317,8 +305,7 @@ void SurfaceRenderer::DrawAnimatedNode(SceneNode* n)
 	vector < Matrix4 > frameMatrices;
 	
 	const Matrix4* invBindPose = n->GetMesh()->GetInverseBindPose();
-	const Matrix4* frameData = n->GetMeshAnimation()
-								->GetJointData(currentFrame);
+	const Matrix4* frameData = n->GetFrameData();
 
 	for (unsigned int i = 0; i < n->GetMesh()->GetJointCount(); ++i) {
 		frameMatrices.emplace_back(frameData[i] * invBindPose[i]);

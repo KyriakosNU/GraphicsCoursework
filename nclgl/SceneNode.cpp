@@ -9,6 +9,9 @@ SceneNode::SceneNode(Mesh* mesh, Vector4 colour, MeshAnimation* anim) {
 	boundingRadius = 1.0f;
 	distanceFromCamera = 0.0f;
 	textures.emplace_back(0);
+
+	currentFrame = 0;
+	frameTime = 0.0f;
 }
 
 SceneNode::~SceneNode(void) {
@@ -29,7 +32,15 @@ void SceneNode::Draw(const OGLRenderer& r) {
 void SceneNode::Update(float dt) {
 	if (parent) { // This node has a parent ...
 		worldTransform = parent -> worldTransform * transform;
-		
+
+		if (GetMeshAnimation())
+		{
+			frameTime -= dt;
+			while (frameTime < 0.0f) {
+				currentFrame = (currentFrame + 1) % anim->GetFrameCount();
+				frameTime += 1.0f / anim->GetFrameRate();
+			}
+		}
 	}
 	else { // Root node , world transform is local transform !
 		worldTransform = transform;

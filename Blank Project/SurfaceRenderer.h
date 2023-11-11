@@ -55,8 +55,6 @@ protected:
 	MeshMaterial* material;
 	vector <GLuint > matTextures;
 
-	int currentFrame;
-	float frameTime;
 
 	vector < SceneNode*> animatedNodeList;
 	vector < SceneNode*> transparentNodeList;
