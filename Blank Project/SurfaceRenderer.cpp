@@ -6,6 +6,8 @@
 #include "../nclgl/MeshAnimation.h"
 #include <algorithm>
 
+#define SHADOWSIZE 2048
+
 SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 	quad = Mesh::GenerateQuad();
 
@@ -32,14 +34,17 @@ SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 	SetTextureRepeating(groundText, true);
 	SetTextureRepeating(bumpmap, true);
 
-	shader = new Shader("BumpVertex.glsl", "BumpFragment.glsl");
+	sceneShader = new Shader("shadowscenevert.glsl",
+		"shadowscenefrag.glsl");
 
 	skyboxShader = new Shader(
 		"skyboxVertex.glsl", "skyboxFragment.glsl");
 
 	skinningShader = new Shader("SkinningVertex.glsl", "texturedFragment.glsl");
 
-	if (!shader->LoadSuccess() ||
+	shadowShader = new Shader("shadowVert.glsl", "shadowFrag.glsl");
+
+	if (!sceneShader->LoadSuccess() ||
 		!skyboxShader->LoadSuccess()){
 		return;
 	}
@@ -54,6 +59,8 @@ SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 
 	projMatrix = Matrix4::Perspective(1.0f, 15000.0f,
 		(float)width / (float)height, 45.0f);
+	
+	ShadowMapInit();
 
 	AddMeshesToScene();
 
@@ -64,6 +71,42 @@ SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 
 
 	init = true;
+}
+
+SurfaceRenderer ::~SurfaceRenderer(void) {
+	delete camera;
+	delete heightMap;
+	delete sceneShader;
+	delete light;
+	delete root;
+	delete skyboxShader;
+	delete quad;
+	delete anim;
+	delete mesh;
+	delete shadowShader;
+	glDeleteTextures(1, &groundText);
+	glDeleteTextures(1, &shadowTex);
+}
+
+void SurfaceRenderer::ShadowMapInit()
+{
+	glGenTextures(1, &shadowTex);
+	glBindTexture(GL_TEXTURE_2D, shadowTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		SHADOWSIZE, SHADOWSIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenFramebuffers(1, &shadowFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+		GL_TEXTURE_2D, shadowTex, 0);
+	glDrawBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void SurfaceRenderer::AddMeshesToScene(){
@@ -102,10 +145,10 @@ void SurfaceRenderer::AddMeshesToScene(){
 	}
 
 	//Adding Robot Guard
-	
-	mesh = Mesh::LoadFromMeshFile("Stylized Astronaut.msh");
-	//anim = new MeshAnimation("Idle.anm");
-	material = new MeshMaterial("Stylized Astronaut.mat");
+
+	mesh = Mesh::LoadFromMeshFile("Role_T.msh");
+	anim = new MeshAnimation("Role_T.anm");
+	material = new MeshMaterial("Role_T.mat");
 	SceneNode* s = new SceneNode();
 
 	s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
@@ -114,7 +157,7 @@ void SurfaceRenderer::AddMeshesToScene(){
 	s->SetModelScale(Vector3(200.0f, 200.0f, 200.0f));
 	s->SetBoundingRadius(100.0f);
 	s->SetMesh(mesh);
-	//s->SetMeshAnimation(anim);
+	s->SetMeshAnimation(anim);
 	
 	for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {
 		const MeshMaterialEntry* matEntry =
@@ -130,19 +173,6 @@ void SurfaceRenderer::AddMeshesToScene(){
 
 	root->AddChild(s);
 
-}
-
-SurfaceRenderer ::~SurfaceRenderer(void) {
-	delete camera;
-	delete heightMap;
-	delete shader;
-	delete light;
-	delete root;
-	delete skyboxShader;
-	delete quad;
-	delete anim;
-	delete mesh;
-	glDeleteTextures(1, &groundText);
 }
 
 void SurfaceRenderer::UpdateScene(float dt) {
@@ -164,35 +194,10 @@ void SurfaceRenderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	DrawSkybox();
-	//DrawHeightmap();
+	DrawHeightmap();
 
 	DrawNodes();
 	ClearNodeLists();
-}
-
-void SurfaceRenderer::DrawHeightmap(){
-	BindShader(shader);
-
-	glUniform1i(glGetUniformLocation(
-		shader->GetProgram(), "diffuseTex"), 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, groundText);
-
-	glUniform1i(glGetUniformLocation(
-		shader->GetProgram(), "bumpTex"), 1);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, bumpmap);
-
-	glUniform3fv(glGetUniformLocation(shader->GetProgram(),
-		"cameraPos"), 1, (float*)&camera->GetPosition());
-
-	modelMatrix.ToIdentity();
-	textureMatrix.ToIdentity();
-
-	UpdateShaderMatrices();
-	SetShaderLight(*light);
-
-	heightMap->Draw();
 }
 
 void SurfaceRenderer::BuildNodeLists(SceneNode* from) {
@@ -235,9 +240,45 @@ void SurfaceRenderer::SortNodeLists() {
 		SceneNode::CompareByCameraDistance);
 }
 
+void SurfaceRenderer::DrawSkybox() {
+	glDepthMask(GL_FALSE);
+
+	BindShader(skyboxShader);
+	UpdateShaderMatrices();
+
+	quad->Draw();
+
+	glDepthMask(GL_TRUE);
+}
+
+void SurfaceRenderer::DrawHeightmap(){
+	BindShader(sceneShader);
+
+	glUniform1i(glGetUniformLocation(
+		sceneShader->GetProgram(), "diffuseTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, groundText);
+
+	glUniform1i(glGetUniformLocation(
+		sceneShader->GetProgram(), "bumpTex"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, bumpmap);
+
+	glUniform3fv(glGetUniformLocation(sceneShader->GetProgram(),
+		"cameraPos"), 1, (float*)&camera->GetPosition());
+
+	modelMatrix.ToIdentity();
+	textureMatrix.ToIdentity();
+
+	UpdateShaderMatrices();
+	SetShaderLight(*light);
+
+	heightMap->Draw();
+}
+
 void SurfaceRenderer::DrawNodes() {
 
-	BindShader(shader);
+	BindShader(sceneShader);
 	UpdateShaderMatrices();
 
 	for (const auto& i : nodeList) {
@@ -254,7 +295,7 @@ void SurfaceRenderer::DrawNodes() {
 		DrawAnimatedNode(i);
 	}
 
-	BindShader(shader);
+	BindShader(sceneShader);
 	for (const auto& i : transparentNodeList) {
 		DrawNode(i);
 	}
@@ -266,10 +307,10 @@ void SurfaceRenderer::DrawNode(SceneNode* n) {
 			Matrix4::Scale(n->GetModelScale());
 
 		glUniformMatrix4fv(
-			glGetUniformLocation(shader->GetProgram(),
+			glGetUniformLocation(sceneShader->GetProgram(),
 				"modelMatrix"), 1, false, model.values);
 
-		glUniform4fv(glGetUniformLocation(shader->GetProgram(),
+		glUniform4fv(glGetUniformLocation(sceneShader->GetProgram(),
 			"nodeColour"), 1, (float*)&n->GetColour());
 
 		for (int i = 0; i < n->GetMesh()->GetSubMeshCount(); ++i) {
@@ -278,7 +319,7 @@ void SurfaceRenderer::DrawNode(SceneNode* n) {
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, texture);
 
-			glUniform1i(glGetUniformLocation(shader->GetProgram(),
+			glUniform1i(glGetUniformLocation(sceneShader->GetProgram(),
 				"useTexture"), texture);
 
 			n->GetMesh()->DrawSubMesh(i);
@@ -323,19 +364,36 @@ void SurfaceRenderer::DrawAnimatedNode(SceneNode* n)
 
 }
 
-void SurfaceRenderer::DrawSkybox() {
-	glDepthMask(GL_FALSE);
-
-	BindShader(skyboxShader);
-	UpdateShaderMatrices();
-
-	quad->Draw();
-
-	glDepthMask(GL_TRUE);
-}
-
 void SurfaceRenderer::ClearNodeLists() {
 	transparentNodeList.clear();
 	animatedNodeList.clear();
 	nodeList.clear();
 }
+
+/*
+void SurfaceRenderer::DrawShadowScene() {
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, SHADOWSIZE, SHADOWSIZE);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+	BindShader(shadowShader);
+
+	viewMatrix = Matrix4::BuildViewMatrix(
+		light->GetPosition(), Vector3(0, 0, 0));
+	projMatrix = Matrix4::Perspective(1, 100, 1, 45);
+	shadowMatrix = projMatrix * viewMatrix; // used later
+
+	for (int i = 0; i < 4; ++i) {
+		modelMatrix = sceneTransforms[i];
+		UpdateShaderMatrices();
+		sceneMeshes[i]->Draw();
+	}
+
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glViewport(0, 0, width, height);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+*/

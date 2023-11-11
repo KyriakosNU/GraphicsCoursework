@@ -26,12 +26,14 @@ protected:
 	void DrawNode(SceneNode* n);
 	void DrawAnimatedNode(SceneNode* n);
 	void DrawSkybox();
+	void DrawShadowScene();
 	void SortNodeLists();
 	void ClearNodeLists();
+	void ShadowMapInit();
 
 	AutomaticCamera* camera;
 
-	Shader* shader;
+	Shader* sceneShader;
 	Shader* skyboxShader;
 	Shader* skinningShader;
 
@@ -55,9 +57,13 @@ protected:
 	MeshMaterial* material;
 	vector <GLuint > matTextures;
 
-
 	vector < SceneNode*> animatedNodeList;
 	vector < SceneNode*> transparentNodeList;
 	vector < SceneNode*> nodeList;
+
+	GLuint shadowTex;
+	GLuint shadowFBO;
+
+	Shader* shadowShader;
 };
 
