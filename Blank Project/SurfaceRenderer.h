@@ -23,7 +23,9 @@ protected:
 	void AddMeshesToScene();
 	void DrawHeightmap();
 	void DrawNodes();
+	void DrawNodeShadows();
 	void DrawNode(SceneNode* n);
+	void DrawNodeShadow(SceneNode* n);
 	void DrawAnimatedNode(SceneNode* n);
 	void DrawSkybox();
 	void DrawShadowScene();

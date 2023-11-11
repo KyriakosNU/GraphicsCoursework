@@ -54,8 +54,8 @@ SurfaceRenderer::SurfaceRenderer(Window& parent) : OGLRenderer(parent) {
 	camera = new AutomaticCamera(-45.0f, 0.0f,
 		heightmapSize * Vector3(0.5f, 5.0f, 0.5f),false);
 
-	light = new Light(heightmapSize * Vector3(0.5f, 1.5f, 0.5f),
-		Vector4(1, 1, 1, 1), heightmapSize.x * 0.5f);
+	light = new Light(heightmapSize * Vector3(0.5f, 7.5f, 0.5f),
+		Vector4(1, 1, 1, 1), heightmapSize.x * 1.0f);
 
 	projMatrix = Matrix4::Perspective(1.0f, 15000.0f,
 		(float)width / (float)height, 45.0f);
@@ -124,8 +124,8 @@ void SurfaceRenderer::AddMeshesToScene(){
 		SceneNode* s = new SceneNode();
 		s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
 		s->SetTransform(Matrix4::Translation(
-			Vector3(4296.0, 900.0, 6096.0 -300.0f + 100.0f + 100 * i)));
-		s->SetModelScale(Vector3(1.0f, 1.0f, 1.0f));
+			Vector3(4296.0, 500.0, 5096.0)) * Matrix4::Rotation(180, Vector3(0, 1, 0)));
+		s->SetModelScale(Vector3(20.0f, 20.0f, 20.0f));
 		s->SetBoundingRadius(100.0f);
 		s->SetMesh(mesh);
 
@@ -194,9 +194,9 @@ void SurfaceRenderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	DrawSkybox();
+	DrawShadowScene();
 	DrawHeightmap();
 
-	DrawNodes();
 	ClearNodeLists();
 }
 
@@ -253,6 +253,9 @@ void SurfaceRenderer::DrawSkybox() {
 
 void SurfaceRenderer::DrawHeightmap(){
 	BindShader(sceneShader);
+	viewMatrix = camera->BuildViewMatrix();
+	projMatrix = Matrix4::Perspective(1.0f, 15000.0f,
+		(float)width / (float)height, 45.0f);
 
 	glUniform1i(glGetUniformLocation(
 		sceneShader->GetProgram(), "diffuseTex"), 0);
@@ -264,6 +267,11 @@ void SurfaceRenderer::DrawHeightmap(){
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, bumpmap);
 
+	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(),
+		"shadowTex"), 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, shadowTex);
+
 	glUniform3fv(glGetUniformLocation(sceneShader->GetProgram(),
 		"cameraPos"), 1, (float*)&camera->GetPosition());
 
@@ -274,17 +282,19 @@ void SurfaceRenderer::DrawHeightmap(){
 	SetShaderLight(*light);
 
 	heightMap->Draw();
+	DrawNodes();
 }
 
 void SurfaceRenderer::DrawNodes() {
 
-	BindShader(sceneShader);
-	UpdateShaderMatrices();
+	//BindShader(sceneShader);
+	//UpdateShaderMatrices();
 
 	for (const auto& i : nodeList) {
 		DrawNode(i);
 	}
 
+	/*
 	BindShader(skinningShader);
 	glUniform1i(glGetUniformLocation(skinningShader->GetProgram(),
 		"diffuseTex"), 0);
@@ -294,8 +304,8 @@ void SurfaceRenderer::DrawNodes() {
 	for (const auto& i : animatedNodeList) {
 		DrawAnimatedNode(i);
 	}
-
-	BindShader(sceneShader);
+	*/
+	//BindShader(sceneShader);
 	for (const auto& i : transparentNodeList) {
 		DrawNode(i);
 	}
@@ -321,10 +331,64 @@ void SurfaceRenderer::DrawNode(SceneNode* n) {
 
 			glUniform1i(glGetUniformLocation(sceneShader->GetProgram(),
 				"useTexture"), texture);
-
+			modelMatrix = model;
+			UpdateShaderMatrices();
 			n->GetMesh()->DrawSubMesh(i);
 		}
 		
+	}
+
+	for (vector < SceneNode* >::const_iterator
+		i = n->GetChildIteratorStart();
+		i != n->GetChildIteratorEnd(); ++i) {
+		DrawNode(*i);
+	}
+}
+
+
+void SurfaceRenderer::DrawNodeShadows() {
+
+	//BindShader(sceneShader);
+	//UpdateShaderMatrices();
+
+	for (const auto& i : nodeList) {
+		DrawNodeShadow(i);
+	}
+
+	/*
+	BindShader(skinningShader);
+	glUniform1i(glGetUniformLocation(skinningShader->GetProgram(),
+		"diffuseTex"), 0);
+
+	UpdateShaderMatrices();
+
+	for (const auto& i : animatedNodeList) {
+		DrawAnimatedNode(i);
+	}
+	*/
+	//BindShader(sceneShader);
+	for (const auto& i : transparentNodeList) {
+		DrawNodeShadow(i);
+	}
+}
+
+void SurfaceRenderer::DrawNodeShadow(SceneNode* n) {
+	if (n->GetMesh()) {
+		Matrix4 model = n->GetWorldTransform() *
+			Matrix4::Scale(n->GetModelScale());
+		/*
+		glUniformMatrix4fv(
+			glGetUniformLocation(sceneShader->GetProgram(),
+				"modelMatrix"), 1, false, model.values);
+
+		for (int i = 0; i < n->GetMesh()->GetSubMeshCount(); ++i) {
+			//modelMatrix = model;
+			//UpdateShaderMatrices();
+			n->GetMesh()->DrawSubMesh(i);
+		}*/	
+		modelMatrix = model;
+		UpdateShaderMatrices();
+		n->GetMesh()->Draw();
 	}
 
 	for (vector < SceneNode* >::const_iterator
@@ -370,7 +434,7 @@ void SurfaceRenderer::ClearNodeLists() {
 	nodeList.clear();
 }
 
-/*
+
 void SurfaceRenderer::DrawShadowScene() {
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 
@@ -385,15 +449,11 @@ void SurfaceRenderer::DrawShadowScene() {
 	projMatrix = Matrix4::Perspective(1, 100, 1, 45);
 	shadowMatrix = projMatrix * viewMatrix; // used later
 
-	for (int i = 0; i < 4; ++i) {
-		modelMatrix = sceneTransforms[i];
-		UpdateShaderMatrices();
-		sceneMeshes[i]->Draw();
-	}
+	heightMap->Draw();
+	//DrawNodeShadows();
 
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glViewport(0, 0, width, height);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-*/
