@@ -21,6 +21,7 @@ public:
 protected:
 	void BuildNodeLists(SceneNode* from);
 	void AddMeshesToScene();
+	void AddPointLightsToScene();
 	void DrawHeightmap();
 	void DrawNodes();
 	void DrawNodeShadows();
@@ -31,7 +32,12 @@ protected:
 	void DrawShadowScene();
 	void SortNodeLists();
 	void ClearNodeLists();
-	void ShadowMapInit();
+	void InitShadowMap();
+	void InitDefShading();
+	void FillBuffers(); //G- Buffer Fill Render Pass
+	void DrawPointLights(); // Lighting Render Pass
+	void CombineBuffers(); // Combination Render Pass
+	void GenerateScreenTexture(GLuint& into, bool depth = false);
 
 	AutomaticCamera* camera;
 
@@ -59,7 +65,6 @@ protected:
 	MeshMaterial* material;
 	vector <GLuint > matTextures;
 
-	vector < SceneNode*> animatedNodeList;
 	vector < SceneNode*> transparentNodeList;
 	vector < SceneNode*> nodeList;
 
@@ -67,5 +72,19 @@ protected:
 	GLuint shadowFBO;
 
 	Shader* shadowShader;
+
+	Shader* pointlightShader;
+	Shader* combineShader;
+
+	GLuint bufferFBO; 
+	GLuint bufferColourTex; 
+	GLuint bufferNormalTex;
+	GLuint bufferDepthTex; 
+
+	GLuint pointLightFBO;
+	GLuint lightDiffuseTex;
+	GLuint lightSpecularTex;
+	Light* pointLights;
+	Mesh* sphere; 
 };
 
