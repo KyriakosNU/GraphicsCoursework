@@ -33,17 +33,25 @@ protected:
 	void SortNodeLists();
 	void ClearNodeLists();
 	void InitShadowMap();
-	void InitDefShading();
+	bool InitDefShading();
+	bool InitPostProcessing();
 	void FillBuffers(); //G- Buffer Fill Render Pass
 	void DrawPointLights(); // Lighting Render Pass
 	void CombineBuffers(); // Combination Render Pass
 	void GenerateScreenTexture(GLuint& into, bool depth = false);
+	void DrawPostProcess();
+	void PresentScene();
 
 	AutomaticCamera* camera;
 
 	Shader* sceneShader;
 	Shader* skyboxShader;
 	Shader* skinningShader;
+	Shader* processShader;
+	Shader* shadowShader;
+	Shader* pointlightShader;
+	Shader* combineShader;
+	Shader* texturedShader;
 
 	HeightMap* heightMap;
 	
@@ -71,13 +79,9 @@ protected:
 	GLuint shadowTex;
 	GLuint shadowFBO;
 
-	Shader* shadowShader;
-
-	Shader* pointlightShader;
-	Shader* combineShader;
 
 	GLuint bufferFBO; 
-	GLuint bufferColourTex; 
+	GLuint bufferColourTex[2]; 
 	GLuint bufferNormalTex;
 	GLuint bufferDepthTex; 
 
@@ -86,5 +90,7 @@ protected:
 	GLuint lightSpecularTex;
 	Light* pointLights;
 	Mesh* sphere; 
+
+	GLuint processFBO;
 };
 
