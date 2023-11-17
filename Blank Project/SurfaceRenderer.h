@@ -20,6 +20,7 @@ public:
 	
 protected:
 	void BuildNodeLists(SceneNode* from);
+	void BuildSkyNodeLists(SceneNode* from);
 	void AddMeshesToScene();
 	void AddPointLightsToScene();
 	void DrawHeightmap();
@@ -29,6 +30,7 @@ protected:
 	void DrawNodeShadow(SceneNode* n);
 	void DrawAnimatedNode(SceneNode* n);
 	void DrawSkybox();
+	void DrawWater();
 	void DrawShadowScene();
 	void SortNodeLists();
 	void ClearNodeLists();
@@ -40,8 +42,13 @@ protected:
 	void CombineBuffers(); // Combination Render Pass
 	void GenerateScreenTexture(GLuint& into, bool depth = false);
 	void DrawPostProcess();
+	void DrawGammaCorrection();
+	void DrawBloom(bool isInverted);
 	void PresentScene();
+	void UpdatePlanet(SceneNode* from,int c);
 
+	bool renderSurface = true;
+	int renderPostProc = 0;
 	AutomaticCamera* camera;
 
 	Shader* sceneShader;
@@ -52,11 +59,15 @@ protected:
 	Shader* pointlightShader;
 	Shader* combineShader;
 	Shader* texturedShader;
+	Shader* reflectShader;
+	Shader* gammaShader;
+	Shader* bloomShader;
 
 	HeightMap* heightMap;
 	
 	Light* light;
 
+	GLuint waterTex;
 	GLuint texture;
 	GLuint groundText;
 	GLuint bumpmap;
@@ -66,8 +77,12 @@ protected:
 
 	Mesh* quad;
 	Mesh* mesh;
+	
 
 	SceneNode* root;
+	SceneNode* surface;
+	SceneNode* sky;
+	SceneNode* planet;
 
 	MeshAnimation* anim;
 	MeshMaterial* material;
@@ -75,9 +90,12 @@ protected:
 
 	vector < SceneNode*> transparentNodeList;
 	vector < SceneNode*> nodeList;
+	vector < SceneNode*> skyNodeList;
+	vector < SceneNode*> transparentSkyNodeList;
 
 	GLuint shadowTex;
 	GLuint shadowFBO;
+	GLuint combineFBO;
 
 
 	GLuint bufferFBO; 
@@ -92,5 +110,13 @@ protected:
 	Mesh* sphere; 
 
 	GLuint processFBO;
+
+	float waterRotate;
+	float waterCycle;
+
+	float planetRotate;
+	float planetTheta;
+
+	Vector3 PlanetCenter;
 };
 

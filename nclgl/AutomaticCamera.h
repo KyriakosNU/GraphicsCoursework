@@ -10,14 +10,17 @@ class AutomaticCamera :
 public:
 
 	AutomaticCamera() {
-		AutomaticCamera::InstantiateTrack();
-		isFree = false;
+		AutomaticCamera::InstantiateTrack1();
+		isFree = true;
+		currentTrack = 1;
 		AutomaticCamera::ResetTrackCamera();
 	};
 
 	AutomaticCamera(float pitch, float yaw, Vector3 position, bool isFree) {
-		AutomaticCamera::InstantiateTrack();
+		AutomaticCamera::InstantiateTrack1();
 		this->isFree = isFree;
+		currentTrack = 1;
+		AutomaticCamera::ResetTrackCamera();
 
 		if (isFree)
 		{ 
@@ -25,14 +28,12 @@ public:
 			this->yaw = yaw;
 			this->position = position;
 		}
-		else
-			AutomaticCamera::ResetTrackCamera();
+
 	}
 
 	~AutomaticCamera(void) {};
 
     bool getIsFree() const { return isFree; }
-	void setIsFree(bool isFree);
 	void toggleIsFree();
 
 	void UpdateCamera(float dt);
@@ -40,12 +41,17 @@ public:
 	void UpdateTrackCamera(float dt);
 	void ResetTrackCamera();
 
-	void InstantiateTrack();
+	void InstantiateTrack1();
+	void InstantiateTrack2();
 
+	float getTimeElapsed() const { return timeElapsed; };
+	int getCurrentTrack() const { return currentTrack; };
 protected:
     bool isFree;
 	float timeElapsed;
 	int currentState;
+	int currentTrack;
+	float baseSpeed = 30.0f;
 	CameraState cameraStates[STATEAMMOUNT];
 	float stateChangeTimes[STATEAMMOUNT];
 };
