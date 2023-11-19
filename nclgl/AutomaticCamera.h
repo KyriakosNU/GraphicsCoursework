@@ -2,7 +2,7 @@
 #include "Camera.h"
 #include "CameraState.h"
 
-#define STATEAMMOUNT 5
+#define MAXSTATES 20
 
 class AutomaticCamera :
     public Camera
@@ -13,6 +13,7 @@ public:
 		AutomaticCamera::InstantiateTrack1();
 		isFree = true;
 		currentTrack = 1;
+		baseSpeed = 30.0f;
 		AutomaticCamera::ResetTrackCamera();
 	};
 
@@ -21,6 +22,7 @@ public:
 		this->isFree = isFree;
 		currentTrack = 1;
 		AutomaticCamera::ResetTrackCamera();
+		baseSpeed = 30.0f;
 
 		if (isFree)
 		{ 
@@ -51,8 +53,8 @@ protected:
 	float timeElapsed;
 	int currentState;
 	int currentTrack;
-	float baseSpeed = 30.0f;
-	CameraState cameraStates[STATEAMMOUNT];
-	float stateChangeTimes[STATEAMMOUNT];
+	float baseSpeed;
+	CameraState cameraStates[MAXSTATES];
+	float stateChangeTimes[MAXSTATES];
 };
 

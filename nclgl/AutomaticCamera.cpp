@@ -17,7 +17,9 @@ void AutomaticCamera::toggleIsFree()
 	if (!isFree)
 		AutomaticCamera::ResetTrackCamera();
 	else
+	{
 		baseSpeed = 30.0f;
+	}
 }
 
 void AutomaticCamera::UpdateCamera(float dt) {
@@ -140,21 +142,30 @@ void AutomaticCamera::UpdateTrackCamera(float dt)
 void AutomaticCamera::InstantiateTrack1()
 {
 	currentTrack = 1;
-	baseSpeed = 40;
-	cameraStates[0] = CameraState(20, 30, Vector3(4296.0, 600.0, 4096.0));
-	stateChangeTimes[0] = 3;
+	baseSpeed = 400;
+	cameraStates[0] = CameraState(-18, 125, Vector3(10213.0, 1163.0, 5902.0));
+	stateChangeTimes[0] = 6;
 
-	cameraStates[1] = CameraState(-20, 350, Vector3(4296.0, 500.0, 4096.0));
-	stateChangeTimes[1] = -1;
+	cameraStates[1] = CameraState(-10, 200, Vector3(7511.0,1111.0, 4553.0));
+	stateChangeTimes[1] = 13;
 
-	cameraStates[2] = CameraState(20, 0, Vector3(4296.0, 600.0, 4096.0));
-	stateChangeTimes[2] = 6;
+	cameraStates[2] = CameraState(-35, 250, Vector3(5311.0, 1300.0, 6340.0));
+	stateChangeTimes[2] = 20;
 
-	cameraStates[3] = CameraState(20, 0, Vector3(4296.0, 600.0, 4096.0));
-	stateChangeTimes[3] = 8;
+	cameraStates[3] = CameraState(10, 316, Vector3(6396.0, 500.0, 9196.0));
+	stateChangeTimes[3] = 26;
 
-	cameraStates[4] = CameraState(-50, 0, Vector3(4296.0, 600.0, 4096.0));
-	stateChangeTimes[4] = -1;
+	cameraStates[4] = CameraState(-10, 350, Vector3(7996.0, 740.0, 11596.0));
+	stateChangeTimes[4] =33;
+
+	cameraStates[5] = CameraState(-10, 80, Vector3(11000.0, 950.0, 10596.0));
+	stateChangeTimes[5] = 38;
+
+	cameraStates[6] = CameraState(-30, 95, Vector3(13800.0, 1600.0, 7626.0));
+	stateChangeTimes[6] = 45;
+
+	cameraStates[7] = CameraState(-18, 125, Vector3(10213.0, 1163.0, 5902.0));
+	stateChangeTimes[7] = -1;
 }
 
 void AutomaticCamera::InstantiateTrack2()
@@ -162,18 +173,23 @@ void AutomaticCamera::InstantiateTrack2()
 	currentTrack = 2;
 
 	baseSpeed = 600;
-	cameraStates[0] = CameraState(-10, 180, Vector3(8910.0, 1050.0, 4230.0));
-	stateChangeTimes[0] = 10;
+	cameraStates[0] = CameraState(10, 180, Vector3(8910.0, 750.0, 4230.0));
+	stateChangeTimes[0] = 5;
 
-	cameraStates[1] = CameraState(-80, 220, Vector3(7296.0, 8600.0, 4096.0));
-	stateChangeTimes[1] = 17;
+	cameraStates[1] = CameraState(-60, 170, Vector3(7296.0, 8600.0, 4096.0));
+	stateChangeTimes[1] = 12;
 
-	cameraStates[2] = CameraState(-90, 360, Vector3(7296.0, 14000.0, 4096.0));
+	cameraStates[2] = CameraState(-70, 160, Vector3(7296.0, 14000.0, 4096.0));
 	stateChangeTimes[2] = 25;
 
-	cameraStates[3] = CameraState(90, 360, Vector3(4296.0, 16000.0, 4096.0));
-	stateChangeTimes[3] = 35;
+	cameraStates[3] = CameraState(20, 180, Vector3(7296.0, 55000.0, 4096.0));
+	stateChangeTimes[3] = 40;
 
-	cameraStates[4] = CameraState(-80, 350, Vector3(4296.0, 1000.0, 4096.0));
-	stateChangeTimes[4] = -1;
+	cameraStates[4] = CameraState(-70, 160, Vector3(7296.0, 8600.0, 4096.0));
+	stateChangeTimes[4] = 55;
+
+	cameraStates[5] = CameraState(-15, 205, Vector3(1627.0, 3956.0, 2602.0));
+	stateChangeTimes[5] = -1;
+
+;
 }

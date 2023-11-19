@@ -23,21 +23,18 @@ protected:
 	void BuildSkyNodeLists(SceneNode* from);
 	void AddMeshesToScene();
 	void AddPointLightsToScene();
-	void DrawHeightmap();
+	void DrawHeightmap(Matrix4 viewmatrix);
 	void DrawNodes();
-	void DrawNodeShadows();
 	void DrawNode(SceneNode* n);
-	void DrawNodeShadow(SceneNode* n);
 	void DrawAnimatedNode(SceneNode* n);
 	void DrawSkybox();
-	void DrawWater();
-	void DrawShadowScene();
+	void DrawWater(Vector3* CameraPos);
+	void DrawAboveView();
 	void SortNodeLists();
 	void ClearNodeLists();
 	void InitShadowMap();
 	bool InitDefShading();
 	bool InitPostProcessing();
-	void FillBuffers(); //G- Buffer Fill Render Pass
 	void DrawPointLights(); // Lighting Render Pass
 	void CombineBuffers(); // Combination Render Pass
 	void GenerateScreenTexture(GLuint& into, bool depth = false);
@@ -46,9 +43,10 @@ protected:
 	void DrawBloom(bool isInverted);
 	void PresentScene();
 	void UpdatePlanet(SceneNode* from,int c);
+	void UpdatePlanetScale(SceneNode* from, int c);
 
-	bool renderSurface = true;
-	int renderPostProc = 0;
+	bool renderSurface;
+	int renderPostProc;
 	AutomaticCamera* camera;
 
 	Shader* sceneShader;

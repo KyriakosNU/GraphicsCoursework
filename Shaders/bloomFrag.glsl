@@ -31,8 +31,8 @@ void main ( void ) {
 	
 	float brightness = dot(tex.rgb, vec3(0.2126, 0.7152, 0.0722));
 	
-	if(	(brightness >= 0.1f && !isInverted) ||
-		(brightness <= 0.1f && isInverted))
+	if(	(brightness >= 0.2f && !isInverted) ||
+		(brightness <= 0.2f && isInverted))
         fragColor = vec4(fragColor.rgb, 1.0);
     else
         fragColor = vec4(tex.rgb, 1.0);
